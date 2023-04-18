@@ -1,0 +1,18 @@
+{
+  "name": "font-pick",
+  "version": "0.2.1",
+  "description": "",
+  "bin": {
+    "font-pick": "./bin/font-pick.js"
+  },
+  "keywords": [],
+  "author": "Keylenn",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "elapsed-time-logger": "^1.1.7",
+    "filesize": "^10.0.7",
+    "minimist": "^1.2.8",
+    "opentype.js": "^1.3.4"
+  }
+}
