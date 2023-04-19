@@ -1,6 +1,6 @@
 {
   "name": "font-pick",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "",
   "bin": {
     "font-pick": "./bin/font-pick.js"
