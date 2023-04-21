@@ -1,13 +1,24 @@
 {
   "name": "font-pick",
-  "version": "0.3.0",
-  "description": "",
+  "version": "0.4.0",
+  "description": "Pick only the fonts you want",
   "bin": {
     "font-pick": "./bin/font-pick.js"
   },
-  "keywords": [],
-  "author": "Keylenn",
-  "license": "ISC",
+  "keywords": [
+    "font",
+    "font compression",
+    "opentype",
+    "font-face",
+    "ttf",
+    "otf"
+  ],
+  "repository": "https://github.com/Keylenn/font-pick.git",
+  "engines": {
+    "node": ">=10"
+  },
+  "author": "Keylenn <darklight_on@163.com>",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",
     "elapsed-time-logger": "^1.1.7",
