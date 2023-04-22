@@ -61,10 +61,10 @@ Pick only the fonts you want. 只选你想要的字体。
 #### `font-pick`和`font-spider`有什么区别❓ 
 [`font-spider`](https://github.com/allanguys/font-spider)是一个Web字体压缩工具，可以通过识别模板html页面使用的字体并进行按需压缩，还支持生成其他格式的字体包。然而`font-spider`在压缩字体时需要基于模板html，在二次异地开发或者多人协同的时候容易导致字体覆盖或无法新增字体等弊端。
 
-这就是`font-pick`专注想要解决的问题。`font-pick`不需要模板文件，可直接生成字体包，可以轻松解决`font-spider`在压缩字体时遇到的上述问题；而且经过`font-pick`挑选压缩后的字体包大小会比`font-spider`压缩过的更轻量。
+这就是`font-pick`专注想要解决的问题。`font-pick`不需要模板文件，可直接生成字体包，可以轻松解决`font-spider`在压缩字体时遇到的上述问题。
 
 #### `font-pick`和`font-spider`可以混用吗❓ 
-完全可以，`font-pick`的出现不是为了替代`font-spider`，只是为了弥补`font-spider`在压缩字体时遇到的上述👆问题。
+完全可以，`font-pick`的出现不是为了替代`font-spider`，只是为了弥补`font-spider`在压缩字体时遇到的不足。
 
 ## 🏗 TODO 
 + 新增支持其他字体格式

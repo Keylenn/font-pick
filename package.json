@@ -1,6 +1,6 @@
 {
   "name": "font-pick",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Pick only the fonts you want",
   "bin": {
     "font-pick": "./bin/font-pick.js"
