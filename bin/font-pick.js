@@ -14,6 +14,8 @@ const {
   Font
 } = require('fonteditor-core')
 
+const pkg = require('../package.json')
+
 const defaultArgv = {
   font: './font.ttf',
   dir: process.cwd(),
@@ -197,6 +199,8 @@ async function pick() {
     log('outputPath:', pathChalk(path.join(argv.output, outputBaseName)), getSizeByPath(outputPath))
 
     progressElapsedTimer.end(chalk.green('✅ Pick font successfully!'))
+    log('💡 You can preview in Here: ' + chalk.blueBright('https://blog.luckly-mjw.cn/tool-show/iconfont-preview/index.html'))
+
   } catch (error) {
     errorLog(error)
   }
@@ -214,6 +218,8 @@ if (argv.help) {
   log(`  ${bashChalk('font-pick -o ')}${bashChalk.italic('./font-pick')} // Directory where the font package is generated,  the default option is ${defaultArgv.output}`)
   log(`  ${bashChalk('font-pick -n ')}${bashChalk.italic('font')} // The name of the generated font package, the default option is the basename of the font option`)
   process.exit(0)
+} else if(argv.version) {
+  log(`${chalk.blueBright(pkg.version)}`)
 } else if (!argv.string) {
   errorLog(`Parameter [string] is required! Run "${bashChalk("font-pick --help")}" to learn more`)
   process.exit(-1)
