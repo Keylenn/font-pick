@@ -1,6 +1,6 @@
 {
   "name": "font-pick",
-  "version": "0.4.1",
+  "version": "0.5.3",
   "description": "Pick only the fonts you want",
   "bin": {
     "font-pick": "./bin/font-pick.js"
@@ -15,7 +15,7 @@
   ],
   "repository": "https://github.com/Keylenn/font-pick.git",
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "author": "Keylenn <darklight_on@163.com>",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "chalk": "^4.1.2",
     "elapsed-time-logger": "^1.1.7",
     "filesize": "^10.0.7",
-    "minimist": "^1.2.8",
-    "opentype.js": "^1.3.4"
+    "fonteditor-core": "^2.4.0",
+    "minimist": "^1.2.8"
   }
 }

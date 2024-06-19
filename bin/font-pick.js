@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 
-const opentype = require('opentype.js')
 const minimist = require("minimist")
 const path = require('path')
 const chalk = require('chalk')
 const fs = require('fs')
 const elapsed = require("elapsed-time-logger")
-const {filesize} = require('filesize')
+const {
+  filesize
+} = require('filesize')
 const http = require('http')
 const https = require('https')
+const {
+  Font
+} = require('fonteditor-core')
 
 const defaultArgv = {
   font: './font.ttf',
@@ -34,14 +38,14 @@ const pathChalk = chalk.yellow
 const log = console.log
 const errorLog = (msg) => log(chalk.red('❌ Failed to pick font:'), msg)
 const getSize = (size) => {
-    const _size = filesize(size)
-    if(size > 1024 * 1000) {
-      return chalk.red(_size)
-    } else if(size > 1024 * 50)  {
-      return chalk.yellow(_size)
-    } else {
-      return chalk.green(_size)
-    }
+  const _size = filesize(size)
+  if (size > 1024 * 1000) {
+    return chalk.red(_size)
+  } else if (size > 1024 * 50) {
+    return chalk.yellow(_size)
+  } else {
+    return chalk.green(_size)
+  }
 }
 const isPathUrl = s => /^http(s)?/.test(s)
 
@@ -49,27 +53,31 @@ const getSizeByPath = (path) => isPathUrl(path) ? '' : getSize(fs.statSync(path)
 
 
 const parseFont = (p) => isPathUrl(p) ? {
-    path: p,
-    loadFont: loadFontFromUrl,
-  } : {
-    path: path.resolve(argv.dir, p),
-    loadFont: opentype.load
-  }
+  path: p,
+  loadFont: loadFontFromUrl,
+} : {
+  path: path.resolve(argv.dir, p),
+  loadFont: fs.readFileSync
+}
 
 function loadFontFromUrl(url) {
   return new Promise((resolve, reject) => {
-    const {protocol, hostname, pathname, port} = new URL(url)
+    const {
+      protocol,
+      hostname,
+      pathname,
+      port
+    } = new URL(url)
     const isHttps = protocol === "https:"
 
-    const callback = function(res) {
+    const callback = function (res) {
       const chunks = []
-      res.on('data', function(chunk) {
+      res.on('data', function (chunk) {
         chunks.push(chunk)
       })
-      res.on('end', function() {
+      res.on('end', function () {
         const buffer = Buffer.concat(chunks)
-        const font = opentype.parse(buffer.buffer)
-        resolve(font)
+        resolve(buffer)
       })
     }
 
@@ -80,8 +88,8 @@ function loadFontFromUrl(url) {
       method: 'GET',
       rejectUnauthorized: false, // ignore certificate verification
     }, callback) : http.get(url, callback)
-    
-    ClientRequest.on('error', function(err) {
+
+    ClientRequest.on('error', function (err) {
       reject(err)
     })
 
@@ -89,7 +97,7 @@ function loadFontFromUrl(url) {
 }
 
 function parsePath(p) {
-  const names =  path.basename(p).split('.')
+  const names = path.basename(p).split('.')
   const ext = names.pop()
   return {
     name: names.join('.'),
@@ -98,71 +106,96 @@ function parsePath(p) {
 }
 
 
-
-
-
 async function pick() {
   try {
     const progressElapsedTimer = elapsed.start()
-
-    const {path: fontPath, loadFont} = parseFont(argv.font)
-    const {name: fontName, ext} = parsePath(fontPath)
+    const {
+      path: fontPath,
+      loadFont
+    } = parseFont(argv.font)
+    const {
+      name: fontName,
+      ext
+    } = parsePath(fontPath)
     log('fontPath:', pathChalk(argv.font), getSizeByPath(fontPath))
 
-    const font = await loadFont(fontPath)
-    const filterString = [...new Set(argv.string.replace(/\s/g, '').split(''))].join('')
-    const stringGlyphs =  font.stringToGlyphs(filterString)
+    const buffer = await loadFont(fontPath)
 
-    const create = (glyphs = []) => {
-      // add .notdef glyphs
-      const notdefGlyphs = font.glyphs.glyphs['0']
-      if(notdefGlyphs && notdefGlyphs.name === '.notdef') glyphs.unshift(notdefGlyphs)
-      const pickedFont = new opentype.Font({
-        familyName: font.names.fontFamily.en,
-        styleName: font.names.fontSubfamily.en,
-        unitsPerEm: 1000,
-        ascender: 800,
-        descender: -200,
-        glyphs
-      })
+    const filterStringUnicode = [...new Set(argv.string.replace(/\s/g, '').split(''))].map(s => s.charCodeAt())
 
-      const outputDir = path.resolve(argv.dir, argv.output)
-      const outputBaseName = `${argv.name || fontName}.${ext}`
-      const outputPath = path.join(outputDir, outputBaseName)
-      
-      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir)
-      
-      fs.writeFileSync(outputPath, Buffer.from(pickedFont.toArrayBuffer()))
-      log('outputPath:', pathChalk(path.join(argv.output, outputBaseName)), getSizeByPath(outputPath))
+    const commonCreateFontOption = {
+      hinting: true,
+      kerning: true,
+      compound2simple: true,
+      inflate: undefined,
+      combinePath: false,
     }
+    const font = Font.create(buffer, {
+      type: ext,
+      subset: filterStringUnicode,
+      ...commonCreateFontOption,
+    });
 
     if(argv.base) {
-      const {path: basePath, loadFont: loadBase} = parseFont(argv.base)
-      log('basePath:', pathChalk(argv.base), getSizeByPath(basePath))
-      const base = await loadBase(basePath)
+      const {path: baseFontPath, loadFont: loadBaseFont} = parseFont(argv.base)
+      log('baseFontPath:', pathChalk(argv.base), getSizeByPath(baseFontPath))
+      const baseBuffer = await loadBaseFont(baseFontPath)
+      const {
+        ext: baseFontExt
+      } = parsePath(baseFontPath)
+      
+      let baseFont = Font.create(baseBuffer, {
+        type: baseFontExt,
+        ...commonCreateFontOption,
+      });
 
-      const mergedGlyphs = []
-      const nameUnicodeMap = {}
-
-      const baseGlyphsObject = base.glyphs.glyphs
-      for (const key in baseGlyphsObject) {
-          if (Object.hasOwnProperty.call(baseGlyphsObject, key)) {
-              const glyph = baseGlyphsObject[key]
-              nameUnicodeMap[glyph.name] = glyph.unicode
-              mergedGlyphs.push(glyph)
-          }
+      // Remove duplicate unicode before merge font.
+      const baseUnicode = Object.keys(baseFont?.data?.cmap).map(i => +i)
+      const filterBaseUnicode = baseUnicode?.filter(i => !filterStringUnicode?.includes(i))
+      if(filterBaseUnicode?.length > 0) {
+        if(baseUnicode.length !== filterBaseUnicode.length) {
+          baseFont = Font.create(baseBuffer, {
+            type: baseFontExt,
+            subset: filterBaseUnicode,
+            ...commonCreateFontOption,
+          })
+        }
+        font.merge(baseFont, {
+          scale: 1
+        })
       }
 
-      for (sg  of stringGlyphs) {
-        if(nameUnicodeMap[sg.name]) continue
-        nameUnicodeMap[sg.name] = sg.unicode
-        mergedGlyphs.push(sg)
-      }
-      create(mergedGlyphs)
-
-    } else {
-      create(stringGlyphs)
     }
+
+    font.sort()
+
+    const outputBuffer = font.write({
+      // support ttf, woff, woff2, eot, svg
+      type: ext,
+      // save font hinting tables, default false
+      hinting: false,
+      // save font kerning tables, default false
+      kerning: false,
+      // write glyf data when simple glyph has no contours, default false
+      writeZeroContoursGlyfData: false,
+      // deflate function for woff, eg. pako.deflate
+      deflate: undefined,
+      // for user to overwrite head.xMin, head.xMax, head.yMin, head.yMax, hhea etc.
+      support: {
+        head: {},
+        hhea: {}
+      }
+    });
+
+    const outputDir = path.resolve(argv.dir, argv.output)
+    const outputBaseName = `${argv.name || fontName}.${ext}`
+    const outputPath = path.join(outputDir, outputBaseName)
+
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir)
+
+    fs.writeFileSync(outputPath, outputBuffer)
+    log('outputPath:', pathChalk(path.join(argv.output, outputBaseName)), getSizeByPath(outputPath))
+
     progressElapsedTimer.end(chalk.green('✅ Pick font successfully!'))
   } catch (error) {
     errorLog(error)
@@ -171,7 +204,7 @@ async function pick() {
 
 
 // process
-if(argv.help) {
+if (argv.help) {
   log(`${chalk.green('🗂️ Usage:')}`)
   log(`  ${bashChalk('font-pick --help')} // Print help information`)
   log(`  ${bashChalk('font-pick -s ')}${bashChalk.italic('0123')} // The string that needs to be picked`)
@@ -181,10 +214,9 @@ if(argv.help) {
   log(`  ${bashChalk('font-pick -o ')}${bashChalk.italic('./font-pick')} // Directory where the font package is generated,  the default option is ${defaultArgv.output}`)
   log(`  ${bashChalk('font-pick -n ')}${bashChalk.italic('font')} // The name of the generated font package, the default option is the basename of the font option`)
   process.exit(0)
-} else if(!argv.string) {
+} else if (!argv.string) {
   errorLog(`Parameter [string] is required! Run "${bashChalk("font-pick --help")}" to learn more`)
   process.exit(-1)
 } else {
   pick()
 }
-
