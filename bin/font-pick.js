@@ -101,9 +101,14 @@ function loadFontFromUrl(url) {
 function parsePath(p) {
   const names = path.basename(p).split('.')
   const ext = names.pop()
+  const workFontType = 'ttf'
+
   return {
     name: names.join('.'),
-    ext
+    ext,
+    workFontType,
+    // no support write otf
+    outputFontType: ext === 'otf' ? workFontType : ext
   }
 }
 
@@ -117,7 +122,8 @@ async function pick() {
     } = parseFont(argv.font)
     const {
       name: fontName,
-      ext
+      workFontType,
+      outputFontType
     } = parsePath(fontPath)
     log('fontPath:', pathChalk(argv.font), getSizeByPath(fontPath))
 
@@ -133,7 +139,7 @@ async function pick() {
       combinePath: false,
     }
     const font = Font.create(buffer, {
-      type: ext,
+      type: workFontType,
       subset: filterStringUnicode,
       ...commonCreateFontOption,
     });
@@ -142,12 +148,9 @@ async function pick() {
       const {path: baseFontPath, loadFont: loadBaseFont} = parseFont(argv.base)
       log('baseFontPath:', pathChalk(argv.base), getSizeByPath(baseFontPath))
       const baseBuffer = await loadBaseFont(baseFontPath)
-      const {
-        ext: baseFontExt
-      } = parsePath(baseFontPath)
       
       let baseFont = Font.create(baseBuffer, {
-        type: baseFontExt,
+        type: workFontType,
         ...commonCreateFontOption,
       });
 
@@ -157,7 +160,7 @@ async function pick() {
       if(filterBaseUnicode?.length > 0) {
         if(baseUnicode.length !== filterBaseUnicode.length) {
           baseFont = Font.create(baseBuffer, {
-            type: baseFontExt,
+            type: workFontType,
             subset: filterBaseUnicode,
             ...commonCreateFontOption,
           })
@@ -173,7 +176,7 @@ async function pick() {
 
     const outputBuffer = font.write({
       // support ttf, woff, woff2, eot, svg
-      type: ext,
+      type: outputFontType,
       // save font hinting tables, default false
       hinting: false,
       // save font kerning tables, default false
@@ -190,7 +193,7 @@ async function pick() {
     });
 
     const outputDir = path.resolve(argv.dir, argv.output)
-    const outputBaseName = `${argv.name || fontName}.${ext}`
+    const outputBaseName = `${argv.name || fontName}.${outputFontType}`
     const outputPath = path.join(outputDir, outputBaseName)
 
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir)
