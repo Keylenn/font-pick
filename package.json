@@ -1,17 +1,16 @@
 {
   "name": "font-pick",
-  "version": "0.5.3",
+  "version": "0.5.5",
   "description": "Pick only the fonts you want",
   "bin": {
     "font-pick": "./bin/font-pick.js"
   },
   "keywords": [
     "font",
+    "fonteditor-core",
     "font compression",
-    "opentype",
     "font-face",
-    "ttf",
-    "otf"
+    "ttf"
   ],
   "repository": "https://github.com/Keylenn/font-pick.git",
   "engines": {
